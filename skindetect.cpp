@@ -23,10 +23,10 @@
 
 // RGB values of interest
 #define REDMAX 230
-#define REDMIN 160 
+#define REDMIN 160
 #define BLUEMAX 210
 #define BLUEMIN 130
-#define GREENMAX 220 
+#define GREENMAX 220
 #define GREENMIN 130
 #define IIREDMAX 87
 #define IIREDMIN 38
@@ -59,7 +59,7 @@
 #define WOODMINGREEN 151
 #define WOODMAXBLUE 162
 #define WOODMINBLUE 141
-#define RWOODTWOMAX 210 
+#define RWOODTWOMAX 210
 #define RWOODTWOMIN 157
 #define GWOODTWOMAX 183
 #define GWOODTWOMIN 127
@@ -120,7 +120,7 @@
 
 // image -> pixels
 CvScalar** getPixelColor(IplImage *img)
-{ 
+{
 	CvScalar** data = new CvScalar*[X];
 	for(int i = 0; i < X; i++)
 		data[i] = new CvScalar[Y];
@@ -130,13 +130,13 @@ CvScalar** getPixelColor(IplImage *img)
   {
     for (int y = 0; y < img->height; y++)
     {
-      data[x][y].val[0] = 
+      data[x][y].val[0] =
         ((uchar*)(img->imageData + img->widthStep * y))[x * 3]; // blue
-		  data[x][y].val[1] = 
+		  data[x][y].val[1] =
         ((uchar*)(img->imageData + img->widthStep * y))[x * 3 + 1]; // green
-		  data[x][y].val[2] = 
+		  data[x][y].val[2] =
         ((uchar*)(img->imageData + img->widthStep * y))[x * 3 + 2]; // red
-		}
+    }
   }
   return data;
 }
@@ -144,7 +144,7 @@ CvScalar** getPixelColor(IplImage *img)
 int main(int argc, char** argv)
 {
   IplImage* img;
-  
+
   if(argc == 2 && (img = cvLoadImage(argv[1], CV_LOAD_IMAGE_UNCHANGED)) != 0)
   {
   	CvScalar** data = getPixelColor(img); // pixel values
@@ -152,7 +152,7 @@ int main(int argc, char** argv)
     // Some counter variables
   	int sumRED = 0,
         sumGREEN = 0,
-        sumBLUE = 0;	
+        sumBLUE = 0;
     int counterRED = 0,
         counterGREEN = 0,
         counterBLUE = 0;
@@ -169,7 +169,7 @@ int main(int argc, char** argv)
     {
 			counterRED = 0; counterGREEN = 0; counterBLUE = 0;
 			sumRED = 0; sumGREEN = 0; sumBLUE = 0;
-      
+
       // If passs, counter is incremented
 			for (int n = i; n < i + BLOCKsize; n++) {
 				for (int m = j; m < j + BLOCKsize; m++) {
@@ -187,7 +187,7 @@ int main(int argc, char** argv)
 					}
 				}
 			}
-      
+
       /*
         For a block of [BLOCKsize x BLOCKsize] to be called skin, threshold
         must be passed. Average of RGB are taken of the block.
@@ -212,22 +212,22 @@ int main(int argc, char** argv)
 			else {
 				avgB[a][b] = 0;
 			}
-      
+
       b++;
       j+= BLOCKsize;
     }
     a++;
     i+= BLOCKsize;
   }
-  
-	
+
+
   int SKIN[(X / BLOCKsize)][(Y / BLOCKsize)]; // skin matrix
 	/*
     The multiple filters that the averages of RGB must pass through
   */
 	for (int v = 0; v < (X / BLOCKsize); v++) {
     for (int w = 0; w < (Y / BLOCKsize); w++) {
-				if (avgR[v][w] < REDMAX && 
+				if (avgR[v][w] < REDMAX &&
             (avgR[v][w] - avgG[v][w]) >= DIFF &&
             (avgR[v][w] - avgB[v][w]) >= DIFF &&
             avgR[v][w] > REDMIN &&
@@ -236,7 +236,7 @@ int main(int argc, char** argv)
             avgB[v][w] < BLUEMAX &&
             avgB[v][w] > BLUEMIN)
 					SKIN[v][w]=1;
-        
+
         if ((!((avgR[v][w] < REDMAX &&
               (avgR[v][w] - avgG[v][w]) >= DIFF &&
               (avgR[v][w] - avgB[v][w]) >= DIFF &&
@@ -255,11 +255,11 @@ int main(int argc, char** argv)
             avgG[v][w] > IIGREENMIN &&
             avgB[v][w] < IIBLUEMAX &&
             avgB[v][w] > IIBLUEMIN))) ||
-                
+
             ((avgR[v][w] - avgG[v][w]) <= NONSKINNUM &&
             (avgR[v][w] - avgB[v][w]) <= NONSKINNUM &&
             (avgG[v][w] - avgB[v][w]) <= NONSKINNUM) ||
-            
+
             // Eliminate one shade of wood
             (avgR[v][w] <= WOODMAXRED &&
             avgR[v][w] >= WOODMINRED &&
@@ -267,7 +267,7 @@ int main(int argc, char** argv)
             avgG[v][w] >= WOODMINGREEN &&
             avgB[v][w] <= WOODMAXBLUE &&
             avgB[v][w] >= WOODMINBLUE) ||
-            
+
             // Eliminate one shade of red
             (avgR[v][w] <= REDNESSMAXRED &&
             avgR[v][w] >= REDNESSMINRED &&
@@ -275,7 +275,7 @@ int main(int argc, char** argv)
             avgG[v][w] >= REDNESSMINGREEN &&
             avgB[v][w] <= REDNESSMAXBLUE &&
             avgB[v][w] >= REDNESSMINBLUE) ||
-            
+
             (avgR[v][w] < RCOATMAX &&
             (avgR[v][w] - avgG[v][w]) >= 0 &&
             (avgG[v][w] - avgB[v][w]) >= 0 &&
@@ -284,9 +284,9 @@ int main(int argc, char** argv)
             avgG[v][w] > GCOATMIN &&
             avgB[v][w] < BCOATMAX &&
             avgB[v][w] > BCOATMIN))
-					SKIN[v][w]=0;																							
-        
-        
+					SKIN[v][w]=0;
+
+
 				if (avgR[v][w] <= RSHINEMAX &&
             (avgR[v][w] - avgG[v][w]) <= 5 &&
             (avgR[v][w] - avgB[v][w]) <= 6 &&
@@ -298,8 +298,8 @@ int main(int argc, char** argv)
 					SKIN[v][w]=1;
 		  }
 	  }
-      
-    // Write results to file 
+
+    // Write results to file
     std::ofstream myfile;
     myfile.open ("skin.txt");
 	  for (int i=0; i < X / BLOCKsize; i++) {
