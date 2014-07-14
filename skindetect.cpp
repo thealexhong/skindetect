@@ -121,9 +121,9 @@
 // image -> pixels
 CvScalar** getPixelColor(IplImage *img)
 {
-	CvScalar** data = new CvScalar*[X];
-	for(int i = 0; i < X; i++)
-		data[i] = new CvScalar[Y];
+  CvScalar** data = new CvScalar*[X];
+  for(int i = 0; i < X; i++)
+    data[i] = new CvScalar[Y];
 
   // RGB values of each pixel in the image
   for (int x = 0; x < img->width; x++)
@@ -132,9 +132,9 @@ CvScalar** getPixelColor(IplImage *img)
     {
       data[x][y].val[0] =
         ((uchar*)(img->imageData + img->widthStep * y))[x * 3]; // blue
-		  data[x][y].val[1] =
+      data[x][y].val[1] =
         ((uchar*)(img->imageData + img->widthStep * y))[x * 3 + 1]; // green
-		  data[x][y].val[2] =
+      data[x][y].val[2] =
         ((uchar*)(img->imageData + img->widthStep * y))[x * 3 + 2]; // red
     }
   }
@@ -160,58 +160,58 @@ int main(int argc, char** argv)
           avgG[BLOCK_X][BLOCK_Y],
           avgB[BLOCK_X][BLOCK_Y];
 
-	// Looks at each RGB values and see if it passes the skin filters
-	int a = 0, i = 0, b, j; // loop counters
+  // Looks at each RGB values and see if it passes the skin filters
+  int a = 0, i = 0, b, j; // loop counters
   while (a < BLOCK_X && i < X)
   {
     b = 0, j = 0;
     while (b < BLOCK_Y && j < Y)
     {
-			counterRED = 0; counterGREEN = 0; counterBLUE = 0;
-			sumRED = 0; sumGREEN = 0; sumBLUE = 0;
+      counterRED = 0; counterGREEN = 0; counterBLUE = 0;
+      sumRED = 0; sumGREEN = 0; sumBLUE = 0;
 
       // If passs, counter is incremented
-			for (int n = i; n < i + BLOCKsize; n++) {
-				for (int m = j; m < j + BLOCKsize; m++) {
-					if (data[n][m].val[2] <= REDMAX && data[n][m].val[2] >= REDMIN) {
-						sumRED += data[n][m].val[2];
-						counterRED++;
-					}
-					if (data[n][m].val[1] <= GREENMAX && data[n][m].val[1] >= GREENMIN) {
-						sumGREEN += data[n][m].val[1];
-						counterGREEN++;
-					}
-					if (data[n][m].val[0] <= BLUEMAX && data[n][m].val[0] >= BLUEMIN) {
-						sumBLUE += data[n][m].val[0];
-						counterBLUE++;
-					}
-				}
-			}
+      for (int n = i; n < i + BLOCKsize; n++) {
+        for (int m = j; m < j + BLOCKsize; m++) {
+          if (data[n][m].val[2] <= REDMAX && data[n][m].val[2] >= REDMIN) {
+            sumRED += data[n][m].val[2];
+            counterRED++;
+          }
+          if (data[n][m].val[1] <= GREENMAX && data[n][m].val[1] >= GREENMIN) {
+            sumGREEN += data[n][m].val[1];
+            counterGREEN++;
+          }
+          if (data[n][m].val[0] <= BLUEMAX && data[n][m].val[0] >= BLUEMIN) {
+            sumBLUE += data[n][m].val[0];
+            counterBLUE++;
+          }
+        }
+      }
 
       /*
         For a block of [BLOCKsize x BLOCKsize] to be called skin, threshold
         must be passed. Average of RGB are taken of the block.
       */
-			if ((counterRED / (BLOCKsize * BLOCKsize)) >= THRESHOLD) {
-				avgR[a][b] = (sumRED / counterRED);
-			}
-			else {
-				avgR[a][b] = 0;
-			}
+      if ((counterRED / (BLOCKsize * BLOCKsize)) >= THRESHOLD) {
+        avgR[a][b] = (sumRED / counterRED);
+      }
+      else {
+        avgR[a][b] = 0;
+      }
 
-			if ((counterGREEN / (BLOCKsize * BLOCKsize)) >= THRESHOLD) {
-				avgG[a][b] = (sumGREEN / counterGREEN);
-			}
-			else {
-				avgG[a][b] = 0;
-			}
+      if ((counterGREEN / (BLOCKsize * BLOCKsize)) >= THRESHOLD) {
+        avgG[a][b] = (sumGREEN / counterGREEN);
+      }
+      else {
+        avgG[a][b] = 0;
+      }
 
-			if ((counterBLUE / (BLOCKsize * BLOCKsize)) >= THRESHOLD) {
-				avgB[a][b] = (sumBLUE / counterBLUE);
-			}
-			else {
-				avgB[a][b] = 0;
-			}
+      if ((counterBLUE / (BLOCKsize * BLOCKsize)) >= THRESHOLD) {
+        avgB[a][b] = (sumBLUE / counterBLUE);
+      }
+      else {
+        avgB[a][b] = 0;
+      }
 
       b++;
       j+= BLOCKsize;
@@ -222,12 +222,12 @@ int main(int argc, char** argv)
 
 
   int SKIN[(X / BLOCKsize)][(Y / BLOCKsize)]; // skin matrix
-	/*
+  /*
     The multiple filters that the averages of RGB must pass through
   */
-	for (int v = 0; v < (X / BLOCKsize); v++) {
+  for (int v = 0; v < (X / BLOCKsize); v++) {
     for (int w = 0; w < (Y / BLOCKsize); w++) {
-				if (avgR[v][w] < REDMAX &&
+        if (avgR[v][w] < REDMAX &&
             (avgR[v][w] - avgG[v][w]) >= DIFF &&
             (avgR[v][w] - avgB[v][w]) >= DIFF &&
             avgR[v][w] > REDMIN &&
@@ -235,7 +235,7 @@ int main(int argc, char** argv)
             avgG[v][w] > GREENMIN &&
             avgB[v][w] < BLUEMAX &&
             avgB[v][w] > BLUEMIN)
-					SKIN[v][w]=1;
+          SKIN[v][w]=1;
 
         if ((!((avgR[v][w] < REDMAX &&
               (avgR[v][w] - avgG[v][w]) >= DIFF &&
@@ -284,10 +284,10 @@ int main(int argc, char** argv)
             avgG[v][w] > GCOATMIN &&
             avgB[v][w] < BCOATMAX &&
             avgB[v][w] > BCOATMIN))
-					SKIN[v][w]=0;
+          SKIN[v][w]=0;
 
 
-				if (avgR[v][w] <= RSHINEMAX &&
+        if (avgR[v][w] <= RSHINEMAX &&
             (avgR[v][w] - avgG[v][w]) <= 5 &&
             (avgR[v][w] - avgB[v][w]) <= 6 &&
             avgR[v][w] >= RSHINEMIN &&
@@ -295,20 +295,20 @@ int main(int argc, char** argv)
             avgG[v][w] >= GSHINEMIN &&
             avgB[v][w] <= BSHINEMAX &&
             avgB[v][w] >= BSHINEMIN)
-					SKIN[v][w]=1;
-		  }
-	  }
+          SKIN[v][w]=1;
+      }
+    }
 
     // Write results to file
     std::ofstream myfile;
     myfile.open ("skin.txt");
-	  for (int i=0; i < X / BLOCKsize; i++) {
-	    for (int j=0; j < Y / BLOCKsize; j++)
-		    myfile << SKIN[i][j];
+    for (int i=0; i < X / BLOCKsize; i++) {
+      for (int j=0; j < Y / BLOCKsize; j++)
+        myfile << SKIN[i][j];
       myfile << "\n";
-	  }
+    }
     myfile.close();
-	  return 0;
+    return 0;
   }
   return -1;
 }
