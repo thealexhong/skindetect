@@ -156,7 +156,7 @@ int main(int argc, char** argv)
     int counterRED = 0,
         counterGREEN = 0,
         counterBLUE = 0;
-  	float avgR[BLOCK_X][BLOCK_Y],
+  	float avgR[BLOCK_X][BLOCK_Y], // **** TODO: Dynamic Allocation: Stack Overflow might occur
           avgG[BLOCK_X][BLOCK_Y],
           avgB[BLOCK_X][BLOCK_Y];
 
@@ -221,7 +221,7 @@ int main(int argc, char** argv)
   }
 
 
-  int SKIN[(X / BLOCKsize)][(Y / BLOCKsize)]; // skin matrix
+  int SKIN[(X / BLOCKsize)][(Y / BLOCKsize)]; // skin matrix, TODO: Dynamic Allocation, SKIN -> skin (non-constant)
   /*
     The multiple filters that the averages of RGB must pass through
   */
