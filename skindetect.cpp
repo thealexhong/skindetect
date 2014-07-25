@@ -17,9 +17,9 @@
 // Image
 #define X 640 // width
 #define Y 480	// height
-#define BLOCKsize 1
-#define BLOCK_X (X/BLOCKsize)
-#define BLOCK_Y (Y/BLOCKsize)
+#define BLOCK_SIZE 1
+#define BLOCK_X (X/BLOCK_SIZE)
+#define BLOCK_Y (Y/BLOCK_SIZE)
 
 // RGB values of interest
 #define REDMAX 230
@@ -39,11 +39,11 @@
 #define YELLOW 14
 #define LIGHTGREY 7
 #define DIFF 23 //15 best but changed for WOOD elimination
-#define SKIN2RGMAX 24
-#define SKIN2RGMIN 9
-#define SKIN2RBMAX 20
-#define SKIN2RBMIN 9
-#define NONSKINNUM 5
+#define skin2RGMAX 24
+#define skin2RGMIN 9
+#define skin2RBMAX 20
+#define skin2RBMIN 9
+#define NONskinNUM 5
 #define REDMAXTWO 230
 #define REDMINTWO 100
 #define GREENMAXTWO 170
@@ -156,9 +156,18 @@ int main(int argc, char** argv)
     int counterRED = 0,
         counterGREEN = 0,
         counterBLUE = 0;
-  	float avgR[BLOCK_X][BLOCK_Y], // **** TODO: Dynamic Allocation: Stack Overflow might occur
-          avgG[BLOCK_X][BLOCK_Y],
-          avgB[BLOCK_X][BLOCK_Y];
+  	//float avgR[BLOCK_X][BLOCK_Y], // **** TODO: Dynamic Allocation: Stack Overflow might occur
+    //      avgG[BLOCK_X][BLOCK_Y],
+    //      avgB[BLOCK_X][BLOCK_Y];
+    //float** avgR = new float [BLOCK_X * BLOCK_Y];
+    float **avgR = new float* [BLOCK_X];
+    float **avgG = new float* [BLOCK_X];
+    float **avgB = new float* [BLOCK_X];
+    for (int i = 0; i < BLOCK_X; ++i) {
+      avgR[i] = new float[BLOCK_Y];
+      avgG[i] = new float[BLOCK_Y];
+      avgB[i] = new float[BLOCK_Y];
+    }
 
   // Looks at each RGB values and see if it passes the skin filters
   int a = 0, i = 0, b, j; // loop counters
@@ -171,8 +180,8 @@ int main(int argc, char** argv)
       sumRED = 0; sumGREEN = 0; sumBLUE = 0;
 
       // If passs, counter is incremented
-      for (int n = i; n < i + BLOCKsize; n++) {
-        for (int m = j; m < j + BLOCKsize; m++) {
+      for (int n = i; n < i + BLOCK_SIZE; n++) {
+        for (int m = j; m < j + BLOCK_SIZE; m++) {
           if (data[n][m].val[2] <= REDMAX && data[n][m].val[2] >= REDMIN) {
             sumRED += data[n][m].val[2];
             counterRED++;
@@ -189,24 +198,24 @@ int main(int argc, char** argv)
       }
 
       /*
-        For a block of [BLOCKsize x BLOCKsize] to be called skin, threshold
+        For a block of [BLOCK_SIZE x BLOCK_SIZE] to be called skin, threshold
         must be passed. Average of RGB are taken of the block.
       */
-      if ((counterRED / (BLOCKsize * BLOCKsize)) >= THRESHOLD) {
+      if ((counterRED / (BLOCK_SIZE * BLOCK_SIZE)) >= THRESHOLD) {
         avgR[a][b] = (sumRED / counterRED);
       }
       else {
         avgR[a][b] = 0;
       }
 
-      if ((counterGREEN / (BLOCKsize * BLOCKsize)) >= THRESHOLD) {
+      if ((counterGREEN / (BLOCK_SIZE * BLOCK_SIZE)) >= THRESHOLD) {
         avgG[a][b] = (sumGREEN / counterGREEN);
       }
       else {
         avgG[a][b] = 0;
       }
 
-      if ((counterBLUE / (BLOCKsize * BLOCKsize)) >= THRESHOLD) {
+      if ((counterBLUE / (BLOCK_SIZE * BLOCK_SIZE)) >= THRESHOLD) {
         avgB[a][b] = (sumBLUE / counterBLUE);
       }
       else {
@@ -214,19 +223,24 @@ int main(int argc, char** argv)
       }
 
       b++;
-      j+= BLOCKsize;
+      j+= BLOCK_SIZE;
     }
     a++;
-    i+= BLOCKsize;
+    i+= BLOCK_SIZE;
   }
 
 
-  int SKIN[(X / BLOCKsize)][(Y / BLOCKsize)]; // skin matrix, TODO: Dynamic Allocation, SKIN -> skin (non-constant)
+  // int skin[(X / BLOCK_SIZE)][(Y / BLOCK_SIZE)]; // skin matrix, TODO: Dynamic Allocation, skin -> skin (non-constant)
+  int **skin = new int* [(X / BLOCK_SIZE)];
+  for (int i = 0; i < (X / BLOCK_SIZE); ++i) {
+    skin[i] = new int[(Y / BLOCK_SIZE)];
+  }
+
   /*
     The multiple filters that the averages of RGB must pass through
   */
-  for (int v = 0; v < (X / BLOCKsize); v++) {
-    for (int w = 0; w < (Y / BLOCKsize); w++) {
+  for (int v = 0; v < (X / BLOCK_SIZE); v++) {
+    for (int w = 0; w < (Y / BLOCK_SIZE); w++) {
         if (avgR[v][w] < REDMAX &&
             (avgR[v][w] - avgG[v][w]) >= DIFF &&
             (avgR[v][w] - avgB[v][w]) >= DIFF &&
@@ -235,7 +249,7 @@ int main(int argc, char** argv)
             avgG[v][w] > GREENMIN &&
             avgB[v][w] < BLUEMAX &&
             avgB[v][w] > BLUEMIN)
-          SKIN[v][w]=1;
+          skin[v][w] = 1;
 
         if ((!((avgR[v][w] < REDMAX &&
               (avgR[v][w] - avgG[v][w]) >= DIFF &&
@@ -246,19 +260,19 @@ int main(int argc, char** argv)
               avgB[v][w] < BLUEMAX &&
               avgB[v][w] > BLUEMIN) ||
             (avgR[v][w] < IIREDMAX &&
-            (avgR[v][w] - avgG[v][w]) <= SKIN2RGMAX &&
-            (avgR[v][w] - avgG[v][w]) >= SKIN2RGMIN &&
-            (avgR[v][w] - avgB[v][w]) <= SKIN2RBMAX &&
-            (avgR[v][w] - avgB[v][w]) >= SKIN2RBMIN &&
+            (avgR[v][w] - avgG[v][w]) <= skin2RGMAX &&
+            (avgR[v][w] - avgG[v][w]) >= skin2RGMIN &&
+            (avgR[v][w] - avgB[v][w]) <= skin2RBMAX &&
+            (avgR[v][w] - avgB[v][w]) >= skin2RBMIN &&
             avgR[v][w] > IIREDMIN &&
             avgG[v][w] < IIGREENMAX &&
             avgG[v][w] > IIGREENMIN &&
             avgB[v][w] < IIBLUEMAX &&
             avgB[v][w] > IIBLUEMIN))) ||
 
-            ((avgR[v][w] - avgG[v][w]) <= NONSKINNUM &&
-            (avgR[v][w] - avgB[v][w]) <= NONSKINNUM &&
-            (avgG[v][w] - avgB[v][w]) <= NONSKINNUM) ||
+            ((avgR[v][w] - avgG[v][w]) <= NONskinNUM &&
+            (avgR[v][w] - avgB[v][w]) <= NONskinNUM &&
+            (avgG[v][w] - avgB[v][w]) <= NONskinNUM) ||
 
             // Eliminate one shade of wood
             (avgR[v][w] <= WOODMAXRED &&
@@ -284,7 +298,7 @@ int main(int argc, char** argv)
             avgG[v][w] > GCOATMIN &&
             avgB[v][w] < BCOATMAX &&
             avgB[v][w] > BCOATMIN))
-          SKIN[v][w]=0;
+          skin[v][w] = 0;
 
 
         if (avgR[v][w] <= RSHINEMAX &&
@@ -295,19 +309,31 @@ int main(int argc, char** argv)
             avgG[v][w] >= GSHINEMIN &&
             avgB[v][w] <= BSHINEMAX &&
             avgB[v][w] >= BSHINEMIN)
-          SKIN[v][w]=1;
+          skin[v][w] = 1;
       }
     }
 
     // Write results to file
     std::ofstream myfile;
     myfile.open ("skin.txt");
-    for (int i=0; i < X / BLOCKsize; i++) {
-      for (int j=0; j < Y / BLOCKsize; j++)
-        myfile << SKIN[i][j];
+    for (int i = 0; i < X / BLOCK_SIZE; i++) {
+      for (int j = 0; j < Y / BLOCK_SIZE; j++)
+        myfile << skin[i][j];
       myfile << "\n";
     }
     myfile.close();
+
+    for (int i = 0; i < BLOCK_X; ++i) {
+      delete [] skin[i];
+      delete [] avgR[i];
+      delete [] avgG[i];
+      delete [] avgB[i];
+    }
+    delete [] skin;
+    delete [] avgR;
+    delete [] avgG;
+    delete [] avgB;
+    
     return 0;
   }
   return -1;
